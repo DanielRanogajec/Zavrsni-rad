@@ -1,0 +1,61 @@
+CREATE TABLE names
+(
+  tax_id INT NOT NULL,
+  name_txt VARCHAR NOT NULL,
+  unique_name VARCHAR,
+  name_class VARCHAR NOT NULL
+);
+
+CREATE TABLE division
+(
+  division_id INT NOT NULL,
+  division_cde VARCHAR(3) NOT NULL,
+  division_name VARCHAR NOT NULL,
+  comments VARCHAR,
+  PRIMARY KEY (division_id),
+  UNIQUE (division_cde)
+);
+
+CREATE TABLE gencode
+(
+  genetic_code_id INT NOT NULL,
+  abbrevation VARCHAR,
+  name VARCHAR NOT NULL,
+  cde VARCHAR,
+  starts VARCHAR,
+  PRIMARY KEY (genetic_code_id)
+);
+
+CREATE TABLE nodes
+(
+  tax_id INT NOT NULL,
+  parent_tax_id INT NOT NULL,
+  rank VARCHAR NOT NULL,
+  embl_code VARCHAR,
+  division_id INT NOT NULL,
+  inherited_div_flag INT NOT NULL,
+  genetic_code_id INT NOT NULL,
+  inherited_GC_flag INT NOT NULL,
+  mitochondrial_genetic_code_id INT NOT NULL,
+  inherited_MGC_flag INT NOT NULL,
+  genbank_hidden_flag INT NOT NULL,
+  hidden_subtree_root_flag INT NOT NULL,
+  comments VARCHAR,
+  FOREIGN KEY (division_id) REFERENCES division(division_id),
+  FOREIGN KEY (genetic_code_id) REFERENCES gencode(genetic_code_id),
+  FOREIGN KEY (mitochondrial_genetic_code_id) REFERENCES gencode(genetic_code_id)
+);
+
+CREATE TABLE reference_genomes
+(
+  tax_id INT NOT NULL,
+  file_location VARCHAR,
+  PRIMARY KEY (tax_id)
+);
+
+CREATE TABLE headers
+(
+  header VARCHAR NOT NULL,
+  tax_id INT NOT NULL,
+  PRIMARY KEY (header)
+);
