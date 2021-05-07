@@ -6,37 +6,28 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import org.postgresql.util.PSQLException;
+
 import postgres.database.tools.DatabaseConnection;
-import postgres.database.tools.DownloadFastaFile;
-import postgres.database.tools.GroupFastaFiles;
-import postgresSeed.FileReader;
 
 public class Main extends JFrame{
 
@@ -49,8 +40,6 @@ public class Main extends JFrame{
 	private static JComboBox<String> comboBox;
 	private static List<String> userData = null;
 	private static String[] info;
-	private static JButton newSeq;
-	private static JButton seq;
 	private static Map<String, String> data;
 
 
@@ -131,23 +120,37 @@ public class Main extends JFrame{
 						System.out.println(entry.getKey() + ": " + entry.getValue());
 					}
 					if (data.get("file_location") == null) {
-						newSeq.setVisible(true);
-						seq.setVisible(false);
-					} else {
-						newSeq.setVisible(false);
-						seq.setVisible(true);
-					}
-					/*
-					pstmt = connection.prepareStatement("select distinct * from names, nodes as nodes1, nodes as nodes2, reference_genomes\n"
-							+ "where names.tax_id = nodes1.tax_id and names.tax_id = nodes2.parent_tax_id and reference_genomes.tax_id = names.tax_id\n"
-							+ "and lower(name_txt) = trim(lower(?))");
-					pstmt.setString(1, element);
-			        rs = pstmt.executeQuery();
-			        if (rs.next()) {
-			        	seq.setVisible(true);
-			        } else {
-			        	newSeq.setVisible(true);
-			        }*/
+						pstmt = connection.prepareStatement("WITH RECURSIVE sub_tree AS (\n"
+								+ "select nodes.tax_id, names.name_txt, nodes.parent_tax_id, file_location\n"
+								+ "from names, nodes left outer join reference_genomes \n"
+								+ "on nodes.tax_id = reference_genomes.tax_id, gencode, division \n"
+								+ "where nodes.genetic_code_id = gencode.genetic_code_id and nodes.division_id = division.division_id and nodes.tax_id = names.tax_id\n"
+								+ "and name_txt = ? and name_class = 'scientific name'\n"
+								+ "	\n"
+								+ "union all\n"
+								+ "	\n"
+								+ "select nod.tax_id, nam.name_txt, nod.parent_tax_id, gen.file_location \n"
+								+ "from sub_tree st, names nam, nodes nod left outer join reference_genomes gen\n"
+								+ "on nod.tax_id = gen.tax_id, gencode gc, division div\n"
+								+ "where nod.genetic_code_id = gc.genetic_code_id and nod.division_id = div.division_id and nod.tax_id = nam.tax_id\n"
+								+ "and st.parent_tax_id = nod.tax_id and nam.name_class = 'scientific name'\n"
+								+ ")\n"
+								+ "select * from sub_tree\n"
+								+ "limit 10");
+						pstmt.setString(1, element);
+						try {
+							rs = pstmt.executeQuery();
+							while(rs.next()) {
+								if (rs.getString("file_location") != null) {
+									data.put("file_location", rs.getString("file_location"));
+									data.put("parent_name", rs.getString("name_txt"));
+									break;
+								}
+							}
+						} catch (PSQLException ex) {
+							System.out.println(ex);
+						}
+					} 
 
 				} catch (SQLException ex) {
 					ex.printStackTrace();
@@ -222,7 +225,6 @@ public class Main extends JFrame{
 			e1.printStackTrace();
 		} catch (SQLException e) {
 			e.printStackTrace();
-
 		}
 
 		info = new String[] {"tax_id", "name_txt", "unique_name", "name_class", "parent_tax_id", "rank", "embl_code",
@@ -237,7 +239,7 @@ public class Main extends JFrame{
 		
 		Container cp = this.getContentPane();
 			
-		cp.setLayout(new GridLayout(6,0));
+		cp.setLayout(new GridLayout(4,0));
 
 		JTextField text = new JTextField("Tražilica:");
 		text.setEditable(false);
@@ -268,7 +270,8 @@ public class Main extends JFrame{
 				if (e.getModifiers() > 1) {
 					search.setText(((JComboBox<?>)e.getSource()).getSelectedItem().toString());	
 					Thread t = new Thread(new DbRunnable());
-					t.start();				
+					t.start();		
+					
 				}
 			}
 		});
@@ -277,85 +280,19 @@ public class Main extends JFrame{
 		next.addActionListener(e -> {
 			Thread t = new Thread(new DbRunnable(search.getText(), DbRunnable.SELECT));
 			t.start();
+			while (true) {
+				try {
+					t.join();
+				} catch (InterruptedException ex) {
+					continue;
+				}
+				break;
+	 		}
+			@SuppressWarnings("unused")
+			NewWindow newWindow = new NewWindow(data.get("name_txt"), data);
 		});
 		cp.add(next);
-
-		seq = new JButton("Preuzmi sekvencu genoma.");
-		seq.setVisible(false);
-		seq.addActionListener(saveFastaAction);
-		cp.add(seq);
-		newSeq = new JButton("Dodaj sekvencu genoma.");
-		newSeq.setVisible(false);
-		newSeq.addActionListener(addFastaAction);
-		cp.add(newSeq);
 	}
-
-	private Action addFastaAction = new AbstractAction() {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			JFileChooser fc = new JFileChooser();
-			fc.setDialogTitle("Odaberite .fasta datoteku!");
-			fc.setMultiSelectionEnabled(true);
-			if(fc.showOpenDialog(Main.this)!=JFileChooser.APPROVE_OPTION) 
-				return;
-			
-			try {
-				String name = Arrays.stream(data.get("name_txt").split(" ")).collect(Collectors.joining("_"));
-				File[] files = fc.getSelectedFiles();
-				if (files == null || files.length == 0) {
-					return;
-				} else if (files.length == 1) {
-					DownloadFastaFile.download(name, 
-							Files.readAllLines(files[0].toPath()), new File("src/resources/reference_genomes/"));
-				} else {
-					List<String> l = GroupFastaFiles.groupFiles(files);
-					if (l == null || l.isEmpty())
-						return;
-					DownloadFastaFile.download(name, 
-							l, new File("src/resources/reference_genomes/"));
-				}
-				
-				Thread t = new Thread(new DbRunnable(name + ".fasta", DbRunnable.INSERT));
-				t.start();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			
-		}
-	};
-
-	private Action saveFastaAction = new AbstractAction() {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-
-			JFileChooser jfc = new JFileChooser();
-			jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			jfc.setDialogTitle("Odaberite direktorij u koji želite spremiti sekvencu!");
-			if(jfc.showSaveDialog(Main.this)!=JFileChooser.APPROVE_OPTION) {
-				JOptionPane.showMessageDialog(
-						Main.this, 
-						"Ništa nije spremljeno!", 
-						"Upozorenje!", 
-						JOptionPane.WARNING_MESSAGE);	
-			}
-			System.out.println(jfc.getSelectedFile());
-			DownloadFastaFile.download(Arrays.stream(data.get("name_txt").split(" ")).collect(Collectors.joining("_")), 
-					FileReader.readFile("reference_genomes/" + data.get("file_location")), jfc.getSelectedFile());
-		}
-	};
-
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
