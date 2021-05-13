@@ -1,7 +1,7 @@
 package zavrsni;
 
+import java.awt.Color;
 import java.awt.Container;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -17,11 +17,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
@@ -41,6 +41,7 @@ public class Main extends JFrame{
 	private static List<String> userData = null;
 	private static String[] info;
 	private static Map<String, String> data;
+	private boolean hint;
 
 
 	static class DbRunnable implements Runnable{
@@ -102,23 +103,20 @@ public class Main extends JFrame{
 			try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
 
 				try {
-					//PreparedStatement pstmt = connection.prepareStatement("select * from names, nodes, gencode, division where nodes.tax_id = names.tax_id "
-					//			+ "and nodes.genetic_code_id = gencode.genetic_code_id and nodes.division_id = division.division_id and name_txt = ?;");
 					PreparedStatement pstmt = connection.prepareStatement("select * from names, nodes left outer join reference_genomes \n"
 							+ "on nodes.tax_id = reference_genomes.tax_id, gencode, division \n"
 							+ "where nodes.genetic_code_id = gencode.genetic_code_id and nodes.division_id = division.division_id and nodes.tax_id = names.tax_id\n"
 							+ "and lower(name_txt) = trim(lower(?));");
 					pstmt.setString(1, element);
 					ResultSet rs = pstmt.executeQuery();
-					data = new HashMap<>();
 					if (rs.next()) {
+						data = new HashMap<>();
 						for (int i = 0; i < info.length; i++) {
 							data.put(info[i], rs.getString(info[i]));
 						}
 					}
-					for (Map.Entry<String,String> entry : data.entrySet()) {
-						System.out.println(entry.getKey() + ": " + entry.getValue());
-					}
+					if (data == null)
+						return;
 					if (data.get("file_location") == null) {
 						pstmt = connection.prepareStatement("WITH RECURSIVE sub_tree AS (\n"
 								+ "select nodes.tax_id, names.name_txt, nodes.parent_tax_id, file_location\n"
@@ -175,7 +173,7 @@ public class Main extends JFrame{
 			try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
 
 				try {
-					PreparedStatement pstmt = connection.prepareStatement("select * from names where lower(name_txt) like trim(lower(?));");
+					PreparedStatement pstmt = connection.prepareStatement("select * from names where name_txt ilike ?;");
 					pstmt.setString(1, search.getText() + "%");
 					ResultSet rs = pstmt.executeQuery();
 					List<String> names = new ArrayList<>();
@@ -207,14 +205,10 @@ public class Main extends JFrame{
 		}
 	}
 
-
-
-
 	public Main() {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		initGUI();
-		//pack();
-		setSize(800, 200);
+		setSize(650, 200);
 		setLocationRelativeTo(null);
 		setTitle("Aplikacija za pohranu bioinformatičkih podataka u sustavu PostgreSQL");
 
@@ -239,29 +233,29 @@ public class Main extends JFrame{
 		
 		Container cp = this.getContentPane();
 			
-		cp.setLayout(new GridLayout(4,0));
-
-		JTextField text = new JTextField("Tražilica:");
-		text.setEditable(false);
-		cp.add(text);
-
+		cp.setLayout(new LayoutProzora());
+		cp.setBackground(Color.CYAN);
+		
 		search = new JTextArea();
+		search.setFont(search.getFont().deriveFont(20f)); 
+		search.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), 
+				BorderFactory.createLoweredBevelBorder()));
+		checkHint();
 
-		cp.add(search);
-
-
+		cp.add(search, LayoutProzora.FIRST_ELEMENT);
 		search.addKeyListener(new KeyAdapter() {
-
 			@Override
 			public void keyTyped(KeyEvent e) {
+				checkHint();
 				Thread t = new Thread(new DbRunnable());
 				t.start();
+				
 			}
 		});
 
 		comboBox = new JComboBox<String>();
-		comboBox.setSize(800, 80);
-		cp.add(comboBox);
+		
+		cp.add(comboBox, LayoutProzora.SECOND_ELEMENT);
 
 		comboBox.addActionListener(new ActionListener() {
 
@@ -272,11 +266,13 @@ public class Main extends JFrame{
 					Thread t = new Thread(new DbRunnable());
 					t.start();		
 					
+					
 				}
 			}
 		});
 
 		JButton next = new JButton("Traži");
+		next.setFont(next.getFont().deriveFont(15f));
 		next.addActionListener(e -> {
 			Thread t = new Thread(new DbRunnable(search.getText(), DbRunnable.SELECT));
 			t.start();
@@ -288,10 +284,26 @@ public class Main extends JFrame{
 				}
 				break;
 	 		}
-			@SuppressWarnings("unused")
-			NewWindow newWindow = new NewWindow(data.get("name_txt"), data);
+			if (data != null) {
+				@SuppressWarnings("unused")
+				NewWindow newWindow = new NewWindow(data.get("name_txt"), data);
+			}
 		});
-		cp.add(next);
+		cp.add(next, LayoutProzora.THIRD_ELEMENT);
+	}
+
+	protected void checkHint() {
+		if (search.getText().length() == 0)
+			hint = true;
+		if (hint) {
+			search.setForeground(Color.LIGHT_GRAY);
+			search.setText("Upišite naziv organizma:");
+			hint = false;
+		} else {
+			if (search.getText().equals("Upišite naziv organizma:"))
+				search.setText("");
+			search.setForeground(Color.BLACK);
+		}
 	}
 
 	public static void main(String[] args) {

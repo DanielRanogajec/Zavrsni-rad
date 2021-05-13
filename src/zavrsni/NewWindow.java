@@ -1,6 +1,7 @@
 package zavrsni;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Point;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -57,7 +59,7 @@ public class NewWindow extends JFrame{
 		this.data = data;
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		initGUI();
-		pack();
+		setSize(800,300);
 		setLocationRelativeTo(null);
 		setTitle(name);
 		setVisible(true);
@@ -67,7 +69,12 @@ public class NewWindow extends JFrame{
 		
 		Container cp = this.getContentPane();
 		
-		cp.setLayout(new BorderLayout());
+		JPanel panel = new JPanel();
+		panel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		panel.setLayout(new BorderLayout());
+		panel.setBackground(Color.CYAN);
+		
+		//cp.setLayout(new BorderLayout());
 		ModelPodataka model = new ModelPodataka(data);
 		
 		initDataInfo();
@@ -105,29 +112,32 @@ public class NewWindow extends JFrame{
 		
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setPreferredSize(table.getPreferredSize());
-		cp.add(scrollPane, BorderLayout.CENTER);
+		panel.add(scrollPane, BorderLayout.CENTER);
 		
-		JPanel panel = new JPanel(new GridLayout(1,0));
+		JPanel panel2 = new JPanel(new GridLayout(1,0));
+		panel2.setBorder(BorderFactory.createEmptyBorder(5,0,0,0));
+		panel2.setBackground(Color.CYAN);
 
 		
 		if (fileLocation != null && parent != null) {
 			seq = new JButton("Preuzmi sekvencu genoma za " + parent + ".");
 			seq.addActionListener(saveFastaAction);
-			panel.add(seq);
+			panel2.add(seq);
 			newSeq = new JButton("Dodaj sekvencu genoma za " + data.get("name_txt"));
 			newSeq.addActionListener(addFastaAction);
-			panel.add(newSeq, BorderLayout.PAGE_END);
+			panel2.add(newSeq, BorderLayout.PAGE_END);
 		} else if (fileLocation != null) {
 			seq = new JButton("Preuzmi sekvencu genoma.");
 			seq.addActionListener(saveFastaAction);
-			panel.add(seq, BorderLayout.PAGE_END);
+			panel2.add(seq, BorderLayout.PAGE_END);
 		} else {
 			newSeq = new JButton("Dodaj sekvencu genoma.");
 			newSeq.addActionListener(addFastaAction);
-			panel.add(newSeq, BorderLayout.PAGE_END);
+			panel2.add(newSeq, BorderLayout.PAGE_END);
 		}
-
-		cp.add(panel, BorderLayout.PAGE_END);
+		panel.add(panel2, BorderLayout.PAGE_END);
+		cp.add(panel);
+		//cp.add(panel2, BorderLayout.PAGE_END);
 		
 	}
 	
