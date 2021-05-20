@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javax.swing.table.AbstractTableModel;
 
-public class ModelPodataka extends AbstractTableModel{
+public class TableModel extends AbstractTableModel{
 
 	/**
 	 * 
@@ -16,14 +16,19 @@ public class ModelPodataka extends AbstractTableModel{
 	private String[] dataValue;
 	
 	
-	public ModelPodataka(Map<String, String> data) {
-		dataKey = Arrays.copyOf(data.keySet().toArray(), data.size(), String[].class);
-		dataValue = Arrays.copyOf(data.values().toArray(), data.size(), String[].class);
+	public TableModel(Map<String, String> data) {
+		if (data != null) {
+			dataKey = Arrays.copyOf(data.keySet().toArray(), data.size(), String[].class);
+			dataValue = Arrays.copyOf(data.values().toArray(), data.size(), String[].class);
+		}
 	}
 
 	@Override
 	public int getRowCount() {
-		return dataKey.length;
+		if (dataKey != null)
+			return dataKey.length;
+		else
+			return 0;
 	}
 
 	@Override
@@ -48,6 +53,14 @@ public class ModelPodataka extends AbstractTableModel{
 	@Override
 	public String getColumnName(int column) {
 		return "";
+	}
+
+	public void updateData(Map<String, String> data) {
+		if (data != null) {
+			dataKey = Arrays.copyOf(data.keySet().toArray(), data.size(), String[].class);
+			dataValue = Arrays.copyOf(data.values().toArray(), data.size(), String[].class);
+		}
+		
 	}
 	
 }

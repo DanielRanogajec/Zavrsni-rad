@@ -59,3 +59,15 @@ CREATE TABLE headers
   tax_id INT NOT NULL,
   PRIMARY KEY (header)
 );
+
+CREATE TABLE genes
+(
+  symbol VARCHAR NOT NULL,
+  ID VARCHAR NOT NULL,
+  gene_description VARCHAR,
+  organism VARCHAR NOT NULL,
+  genomic_context VARCHAR,
+  annotation VARCHAR,
+  other_aliases VARCHAR,
+  other_designations VARCHAR
+);

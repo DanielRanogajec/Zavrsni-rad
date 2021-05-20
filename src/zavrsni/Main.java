@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
 import org.postgresql.util.PSQLException;
@@ -42,6 +45,7 @@ public class Main extends JFrame{
 	private static String[] info;
 	private static Map<String, String> data;
 	private boolean hint;
+	private Timer timer;
 
 
 	static class DbRunnable implements Runnable{
@@ -134,7 +138,7 @@ public class Main extends JFrame{
 								+ "and st.parent_tax_id = nod.tax_id and nam.name_class = 'scientific name'\n"
 								+ ")\n"
 								+ "select * from sub_tree\n"
-								+ "limit 10");
+								+ "limit 5");
 						pstmt.setString(1, element);
 						try {
 							rs = pstmt.executeQuery();
@@ -177,16 +181,17 @@ public class Main extends JFrame{
 					pstmt.setString(1, search.getText() + "%");
 					ResultSet rs = pstmt.executeQuery();
 					List<String> names = new ArrayList<>();
-					int counter = 0;
-					while (rs.next()) {
-						if (counter++ > 20)
-							break;
+					
+					while (rs.next()) 
 						names.add(rs.getString("name_txt"));
-					}
+					
+					Collections.sort(names, Comparator.comparing(String::length).thenComparing((c1,c2) -> c1.compareTo(c2)));
+					
 					if (comboBox.getItemCount() != 0)
 						comboBox.removeAllItems();
 					for (String s : names) 
 						comboBox.addItem(s);	
+					
 				} catch (SQLException ex) {
 					ex.printStackTrace();
 				}
@@ -244,11 +249,27 @@ public class Main extends JFrame{
 
 		cp.add(search, LayoutProzora.FIRST_ELEMENT);
 		search.addKeyListener(new KeyAdapter() {
+			
 			@Override
 			public void keyTyped(KeyEvent e) {
 				checkHint();
-				Thread t = new Thread(new DbRunnable());
-				t.start();
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (search.getText().length() > 2) {
+					if (timer != null)
+						timer.restart();
+					else {
+						timer = new Timer(500, l -> {
+							if (search.getText().length() > 2) {
+								Thread t = new Thread(new DbRunnable());
+								t.start();
+							}
+						});
+						timer.setRepeats(false);
+					}
+				}
 				
 			}
 		});
@@ -265,8 +286,7 @@ public class Main extends JFrame{
 					search.setText(((JComboBox<?>)e.getSource()).getSelectedItem().toString());	
 					Thread t = new Thread(new DbRunnable());
 					t.start();		
-					
-					
+
 				}
 			}
 		});
