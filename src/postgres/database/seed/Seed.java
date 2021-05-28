@@ -26,8 +26,11 @@ public class Seed {
 	 * Main method
 	 */
     public static void main(String[] args) {
-
-		List<String> userData = null;
+		seed();
+    }
+    
+    public static void seed() {
+    	List<String> userData = null;
 		try {
 			userData = DatabaseConnection.Connect();
 		} catch (IOException e1) {

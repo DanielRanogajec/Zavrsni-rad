@@ -62,6 +62,7 @@ CREATE TABLE headers
 
 CREATE TABLE genes
 (
+  tax_id INT NOT NULL,
   symbol VARCHAR NOT NULL,
   ID VARCHAR NOT NULL,
   gene_description VARCHAR,

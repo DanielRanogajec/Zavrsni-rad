@@ -56,6 +56,21 @@ public class DatabaseConnection {
 		return list;		
 	}
 	
+	
+	public static List<String> ConnectToDb() throws IOException {
+		File f = new File("src/resources/database_info");
+		
+		List<String> list = Files.readAllLines(f.toPath());
+		
+		if (list.size() > 2) 
+			return list;
+		
+		if (!list.isEmpty()) 
+			throw new IOException();
+		
+		return null;
+	}
+	
 	/**
 	 * Method that is called when program could not connect to database.
 	 * Method empties database_info so user can enter new data next time.

@@ -218,12 +218,9 @@ public class Main extends JFrame{
 		setTitle("Aplikacija za pohranu bioinformatičkih podataka u sustavu PostgreSQL");
 
 		try {
-			userData = DatabaseConnection.Connect();
+			userData = DatabaseConnection.ConnectToDb();
 			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
+		} catch (IOException | SQLException | NullPointerException e) {
 		}
 
 		info = new String[] {"tax_id", "name_txt", "unique_name", "name_class", "parent_tax_id", "rank", "embl_code",
@@ -306,7 +303,7 @@ public class Main extends JFrame{
 	 		}
 			if (data != null) {
 				@SuppressWarnings("unused")
-				NewWindow newWindow = new NewWindow(data.get("name_txt"), data);
+				NewWindow newWindow = new NewWindow(data.get("name_txt"), Integer.parseInt(data.get("tax_id")), data);
 			}
 		});
 		cp.add(next, LayoutProzora.THIRD_ELEMENT);
@@ -327,9 +324,23 @@ public class Main extends JFrame{
 	}
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			new Main().setVisible(true);
-		});
+		boolean connected = false;
+		try {
+			userData = DatabaseConnection.ConnectToDb();
+			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2));
+			connected = true;
+		} catch (IOException | SQLException | NullPointerException e) {
+			SwingUtilities.invokeLater(() -> {
+				new LoginWindow().setVisible(true);
+				
+			});
+			connected = true;
+		} 
+		
+		if (connected)
+			SwingUtilities.invokeLater(() -> {
+				new Main().setVisible(true);
+			});
 	}
 
 

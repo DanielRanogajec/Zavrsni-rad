@@ -102,9 +102,15 @@ public class GenesWindow extends JFrame{
 		mapa.put("Gene ID", gen.getID());
 		mapa.put("Gene Description", gen.getGene_description());
 		mapa.put("Genomic Context", gen.getGenomic_context());
-		mapa.put("Other Aliases", Arrays.stream(gen.getOther_aliases()).collect(Collectors.joining(", ")));
-		mapa.put("Other Designations", Arrays.stream(gen.getOther_designations()).collect(Collectors.joining(", ")));
+		if (gen.getOther_aliases() != null)
+			mapa.put("Other Aliases", Arrays.stream(gen.getOther_aliases()).collect(Collectors.joining(", ")));
+		else
+			mapa.put("Other Aliases", null);
 
+		if (gen.getOther_designations() != null)
+			mapa.put("Other Designations", Arrays.stream(gen.getOther_designations()).collect(Collectors.joining(", ")));
+		else
+			mapa.put("Other Designations", null);
 		return mapa;
 	}
 

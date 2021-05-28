@@ -62,14 +62,14 @@ public class NewWindow extends JFrame{
 	private JButton genButton;
 	private Action a;
 
-	public NewWindow(String name, Map<String, String> data) {
+	public NewWindow(String name, int tax_id, Map<String, String> data) {
 		if (data == null) 
 			dispose();
 		parent = data.remove("parent_name");
 		fileLocation = data.remove("file_location");
 		this.data = data;
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		getGenes(name);
+		getGenes(tax_id);
 		initGUI();
 		setSize(800,300);
 		setLocationRelativeTo(null);
@@ -172,7 +172,7 @@ public class NewWindow extends JFrame{
 
 
 
-	private void getGenes(String name) {
+	private void getGenes(int tax_id) {
 		try {
 			List<String> userData = DatabaseConnection.Connect();
 			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2));
@@ -180,11 +180,10 @@ public class NewWindow extends JFrame{
 				try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
 
 					try {
-						PreparedStatement pstmt = connection.prepareStatement("select * from genes where organism = ?;");
-						pstmt.setString(1, name);
+						PreparedStatement pstmt = connection.prepareStatement("select * from genes where tax_id = ?;");
+						pstmt.setInt(1, tax_id);
 						ResultSet rs = pstmt.executeQuery();
 						genes = new ArrayList<>();
-
 						while (rs.next()) {
 							Gen g = new Gen();
 							g.setSymbol(rs.getString("symbol"));
@@ -197,9 +196,7 @@ public class NewWindow extends JFrame{
 							g.setOther_designations(rs.getString("other_designations"));
 							genes.add(g);
 						}
-
 					} catch (SQLException ex1) {
-
 					}
 
 				} 
@@ -326,7 +323,7 @@ public class NewWindow extends JFrame{
 	}
 
 	protected void addToDb() {
-		String SQLinsert = "INSERT INTO genes VALUES(?,?,?,?,?,?,?,?);";
+		String SQLinsert = "INSERT INTO genes VALUES(?,?,?,?,?,?,?,?,?);";
 		List<String> userData = null;
 		try {
 			userData = DatabaseConnection.Connect();
@@ -337,7 +334,21 @@ public class NewWindow extends JFrame{
 		if (userData == null)
 			return;
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
-
+			
+			int tax_id = -1;
+			try (PreparedStatement pstmt = connection.prepareStatement("select tax_id from names where name_txt = ?;")) {
+				pstmt.setString(1, genes.get(0).getOrganism());
+				ResultSet rs = pstmt.executeQuery();
+				if (rs.next()) {
+					tax_id = rs.getInt(1);
+				}
+				if (tax_id == -1) {
+					throw new IllegalArgumentException();
+				}
+					
+			}
+			
+			
 			try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 
 				int counter = 0;
@@ -346,29 +357,30 @@ public class NewWindow extends JFrame{
 					if (gen.getSymbol() == null)
 						continue;
 					
-					pstmt.setString(1, gen.getSymbol());
-					pstmt.setString(2, gen.getID());
+					pstmt.setInt(1, tax_id);
+					pstmt.setString(2, gen.getSymbol());
+					pstmt.setString(3, gen.getID());
 					if (gen.getGene_description() == null) 
-						pstmt.setNull(3, java.sql.Types.VARCHAR);
+						pstmt.setNull(4, java.sql.Types.VARCHAR);
 					else
-						pstmt.setString(3, gen.getGene_description());
-					pstmt.setString(4, gen.getOrganism());
+						pstmt.setString(4, gen.getGene_description());
+					pstmt.setString(5, gen.getOrganism());
 					if (gen.getGenomic_context() == null) 
-						pstmt.setNull(5, java.sql.Types.VARCHAR);
-					else
-						pstmt.setString(5, gen.getGenomic_context());
-					if (gen.getAnnotation() == null) 
 						pstmt.setNull(6, java.sql.Types.VARCHAR);
 					else
-						pstmt.setString(6, gen.getAnnotation());
-					if (gen.getOther_aliases() == null) 
+						pstmt.setString(6, gen.getGenomic_context());
+					if (gen.getAnnotation() == null) 
 						pstmt.setNull(7, java.sql.Types.VARCHAR);
 					else
-						pstmt.setString(7, Arrays.stream(gen.getOther_aliases()).collect(Collectors.joining(", ")));
-					if (gen.getOther_designations() == null) 
+						pstmt.setString(7, gen.getAnnotation());
+					if (gen.getOther_aliases() == null) 
 						pstmt.setNull(8, java.sql.Types.VARCHAR);
 					else
-						pstmt.setString(8, Arrays.stream(gen.getOther_designations()).collect(Collectors.joining(", ")));
+						pstmt.setString(8, Arrays.stream(gen.getOther_aliases()).collect(Collectors.joining(", ")));
+					if (gen.getOther_designations() == null) 
+						pstmt.setNull(9, java.sql.Types.VARCHAR);
+					else
+						pstmt.setString(9, Arrays.stream(gen.getOther_designations()).collect(Collectors.joining(", ")));
 								
 					
 					pstmt.addBatch();

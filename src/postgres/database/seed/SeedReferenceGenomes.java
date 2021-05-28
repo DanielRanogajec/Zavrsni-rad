@@ -32,6 +32,10 @@ public class SeedReferenceGenomes {
 	 * Main method
 	 */
 	public static void main(String[] args) {
+		seed();
+	}
+	
+	public static void seed() {
 		File dir = new File("src/resources/reference_genomes");
 		if (!dir.isDirectory()) 
 			throw new RuntimeException("Not a directory!");
