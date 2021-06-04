@@ -47,8 +47,8 @@ public class Seed {
         	
         	fillDivisions(connection);
         	fillGencode(connection);
-            fillNames(connection);
             fillNodes(connection);
+            fillNames(connection);
             
             
         } 	catch (SQLException e) {

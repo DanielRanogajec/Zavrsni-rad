@@ -40,12 +40,12 @@ import javax.swing.table.TableRowSorter;
 import model.Gen;
 import postgres.database.tools.DatabaseConnection;
 import postgres.database.tools.DownloadFastaFile;
+import postgres.database.tools.FileReader;
 import postgres.database.tools.GeneParser;
 import postgres.database.tools.GroupFastaFiles;
-import postgresSeed.FileReader;
-import zavrsni.Main.DbRunnable;
+import zavrsni.MainWindow.DbRunnable;
 
-public class NewWindow extends JFrame{
+public class OrganismWindow extends JFrame{
 
 	/**
 	 * 
@@ -60,9 +60,8 @@ public class NewWindow extends JFrame{
 	private String fileLocation;
 	private List<Gen> genes;
 	private JButton genButton;
-	private Action a;
 
-	public NewWindow(String name, int tax_id, Map<String, String> data) {
+	public OrganismWindow(String name, int tax_id, Map<String, String> data) {
 		if (data == null) 
 			dispose();
 		parent = data.remove("parent_name");
@@ -133,18 +132,18 @@ public class NewWindow extends JFrame{
 		panel3.setBackground(Color.CYAN);
 
 		if (fileLocation != null && parent != null) {
-			seq = new JButton("Preuzmi sekvencu genoma za " + parent + ".");
+			seq = new JButton("Download genome sequence for " + parent + ".");
 			seq.addActionListener(saveFastaAction);
 			panel3.add(seq);
-			newSeq = new JButton("Dodaj sekvencu genoma za " + data.get("name_txt"));
+			newSeq = new JButton("Add genome sequence for " + data.get("name_txt"));
 			newSeq.addActionListener(addFastaAction);
 			panel3.add(newSeq, BorderLayout.PAGE_END);
 		} else if (fileLocation != null) {
-			seq = new JButton("Preuzmi sekvencu genoma.");
+			seq = new JButton("Download genome sequence.");
 			seq.addActionListener(saveFastaAction);
 			panel3.add(seq, BorderLayout.PAGE_END);
 		} else {
-			newSeq = new JButton("Dodaj sekvencu genoma.");
+			newSeq = new JButton("Add genome sequence.");
 			newSeq.addActionListener(addFastaAction);
 			panel3.add(newSeq, BorderLayout.PAGE_END);
 		}
@@ -153,21 +152,17 @@ public class NewWindow extends JFrame{
 		
 		
 		if (genes == null || genes.isEmpty()) {
-			genButton = new JButton("Dodaj gene.");
+			genButton = new JButton("Add genes.");
 			
-			a = addGenesAction;
-			genButton.addActionListener(a);
-			
-			
+			genButton.addActionListener(addGenesAction);
 
 		} else {
-			genButton = new JButton("Prikaži gene.");
+			genButton = new JButton("Show genes.");
 			genButton.addActionListener(e -> new GenesWindow(genes));
 		}
 		panel2.add(genButton);
 		panel.add(panel2, BorderLayout.PAGE_END);
 		cp.add(panel);
-
 	}
 
 
@@ -187,7 +182,7 @@ public class NewWindow extends JFrame{
 						while (rs.next()) {
 							Gen g = new Gen();
 							g.setSymbol(rs.getString("symbol"));
-							g.setID(rs.getString("id"));
+							g.setID(Integer.parseInt(rs.getString("id")));
 							g.setGene_description(rs.getString("gene_description"));
 							g.setOrganism(rs.getString("organism"));
 							g.setGenomic_context(rs.getString("genomic_context"));
@@ -215,15 +210,15 @@ public class NewWindow extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent e) {			
 			JFileChooser fc = new JFileChooser();
-			fc.setDialogTitle("Odaberite .txt datoteku sa genima!");
+			fc.setDialogTitle("Choose .txt file with genes!");
 			fc.setMultiSelectionEnabled(true);
-			if(fc.showOpenDialog(NewWindow.this)!=JFileChooser.APPROVE_OPTION) 
+			if(fc.showOpenDialog(OrganismWindow.this)!=JFileChooser.APPROVE_OPTION) 
 				return;
 			File file = fc.getSelectedFile();
 			genes = GeneParser.parseGenes(file);
 			addToDb();
-			genButton.removeActionListener(a);
-			genButton.setText("Prikaži gene.");
+			genButton.removeActionListener(addGenesAction);
+			genButton.setText("Show genes.");
 			genButton.addActionListener(e1 -> new GenesWindow(genes));
 			
 		}
@@ -240,9 +235,9 @@ public class NewWindow extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			JFileChooser fc = new JFileChooser();
-			fc.setDialogTitle("Odaberite .fasta datoteku!");
+			fc.setDialogTitle("Choose .fasta file!");
 			fc.setMultiSelectionEnabled(true);
-			if(fc.showOpenDialog(NewWindow.this)!=JFileChooser.APPROVE_OPTION) 
+			if(fc.showOpenDialog(OrganismWindow.this)!=JFileChooser.APPROVE_OPTION) 
 				return;
 
 			try {
@@ -263,6 +258,11 @@ public class NewWindow extends JFrame{
 
 				Thread t = new Thread(new DbRunnable(name + ".fasta", DbRunnable.INSERT));
 				t.start();
+				
+				newSeq.removeActionListener(addFastaAction);
+				newSeq.setText("Download genome sequence.");
+				newSeq.addActionListener(saveFastaAction);
+				fileLocation = Arrays.stream(data.get("name_txt").split(" ")).collect(Collectors.joining("_")) + ".fasta";
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -282,12 +282,12 @@ public class NewWindow extends JFrame{
 
 			JFileChooser jfc = new JFileChooser();
 			jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			jfc.setDialogTitle("Odaberite direktorij u koji želite spremiti sekvencu!");
-			if(jfc.showSaveDialog(NewWindow.this)!=JFileChooser.APPROVE_OPTION) {
+			jfc.setDialogTitle("Choose a folder in which you want to save the sequence!");
+			if(jfc.showSaveDialog(OrganismWindow.this)!=JFileChooser.APPROVE_OPTION) {
 				JOptionPane.showMessageDialog(
-						NewWindow.this, 
-						"Ništa nije spremljeno!", 
-						"Upozorenje!", 
+						OrganismWindow.this, 
+						"Nothing was saved!", 
+						"Warning!", 
 						JOptionPane.WARNING_MESSAGE);	
 			}
 			System.out.println(jfc.getSelectedFile());
@@ -341,13 +341,21 @@ public class NewWindow extends JFrame{
 				ResultSet rs = pstmt.executeQuery();
 				if (rs.next()) {
 					tax_id = rs.getInt(1);
+				}		
+			}
+			if (tax_id == -1 && genes.get(0).getOrganism().contains("(")) {
+				try (PreparedStatement pstmt = connection.prepareStatement("select tax_id from names where name_txt = ?;")) {					
+					pstmt.setString(1, genes.get(0).getOrganism().split("\\(")[0].trim());
+					ResultSet rs = pstmt.executeQuery();
+					if (rs.next()) {
+						tax_id = rs.getInt(1);
+					}		
 				}
-				if (tax_id == -1) {
-					throw new IllegalArgumentException();
-				}
-					
 			}
 			
+			if (tax_id == -1) {
+				throw new IllegalArgumentException();
+			}
 			
 			try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 
@@ -359,7 +367,7 @@ public class NewWindow extends JFrame{
 					
 					pstmt.setInt(1, tax_id);
 					pstmt.setString(2, gen.getSymbol());
-					pstmt.setString(3, gen.getID());
+					pstmt.setInt(3, gen.getID());
 					if (gen.getGene_description() == null) 
 						pstmt.setNull(4, java.sql.Types.VARCHAR);
 					else

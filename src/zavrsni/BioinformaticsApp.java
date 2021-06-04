@@ -33,7 +33,7 @@ import postgres.database.seed.Seed;
 import postgres.database.seed.SeedReferenceGenomes;
 import postgres.database.tools.DatabaseConnection;
 
-public class LoginWindow extends JFrame {
+public class BioinformaticsApp extends JFrame {
 
 	
 	/**
@@ -49,19 +49,14 @@ public class LoginWindow extends JFrame {
 	private JLabel iconLabel;
 
 	
-	public LoginWindow() {
+	public BioinformaticsApp() {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		initGUI();
 
 		setSize(400, 180);
 		setLocationRelativeTo(null);
-		setTitle("Prijava u bazu podataka");
-		
-		
-		
+		setTitle("Login to database");
 	}
-	
-	
 
 	private void initGUI() {
 		Container cp = this.getContentPane();
@@ -121,6 +116,10 @@ public class LoginWindow extends JFrame {
 					DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2));
 				} catch (SQLException ex) {
 					userData.clear();
+					JOptionPane.showMessageDialog(BioinformaticsApp.this,
+						    "Incorrect data.",
+						    "Error",
+						    JOptionPane.ERROR_MESSAGE);
 				}
 				if (!userData.isEmpty()) {
 					File f = new File("src/resources/database_info");
@@ -140,9 +139,9 @@ public class LoginWindow extends JFrame {
 						public void run() {
 							Seed.seed();
 							SeedReferenceGenomes.seed();
-							LoginWindow.this.dispose();
+							BioinformaticsApp.this.dispose();
 							SwingUtilities.invokeLater(() -> {
-								new Main().setVisible(true);
+								new MainWindow().setVisible(true);
 							});
 						}
 					};
@@ -158,7 +157,7 @@ public class LoginWindow extends JFrame {
 							}
 							
 							if (k == 0) {
-								if (JOptionPane.showOptionDialog(LoginWindow.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
+								if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
 									return;
 								
 								login.setEnabled(false);
@@ -168,12 +167,12 @@ public class LoginWindow extends JFrame {
 							} else {
 								this.dispose();
 								SwingUtilities.invokeLater(() -> {
-									new Main().setVisible(true);
+									new MainWindow().setVisible(true);
 								});
 							}
 
 						} catch (SQLException ex) {
-							if (JOptionPane.showOptionDialog(LoginWindow.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
+							if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
 								return;
 							
 							login.setEnabled(false);
@@ -225,13 +224,13 @@ public class LoginWindow extends JFrame {
 			connected = true;
 		} catch (IOException | SQLException | NullPointerException e) {
 			SwingUtilities.invokeLater(() -> {
-				new LoginWindow().setVisible(true);
+				new BioinformaticsApp().setVisible(true);
 			});
 		} 
 		
 		if (connected)
 			SwingUtilities.invokeLater(() -> {
-				new Main().setVisible(true);
+				new MainWindow().setVisible(true);
 			});
 	}
 }

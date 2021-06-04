@@ -107,17 +107,15 @@ public class SeedReferenceGenomes {
      * @throws SQLException
      */
 	private static void fillReferenceGenomes(Connection connection, Map<Integer, File> map) throws SQLException {
-		String SQLinsert = "INSERT INTO reference_genomes VALUES(?,?) ON CONFLICT(tax_id) DO NOTHING;";
+		String SQLinsert = "INSERT INTO reference_genomes VALUES(?,?);";
 
 		try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 						
 			int counter = 0;
 			for (Map.Entry<Integer, File> entry : map.entrySet()) {
-	        	
 				
 				pstmt.setInt(1, entry.getKey());
 				pstmt.setString(2, entry.getValue().getName());
-				
 				pstmt.addBatch();
 				
 				if (++counter % 100 == 0 || counter == map.size())
@@ -137,14 +135,13 @@ public class SeedReferenceGenomes {
      * @throws SQLException
      */
     private static void fillHeaders(Connection connection, Map<String, Integer> map) throws SQLException {
-    	String SQLinsert = "INSERT INTO headers VALUES(?,?) ON CONFLICT(header) DO NOTHING;";
+    	String SQLinsert = "INSERT INTO headers VALUES(?,?);";
 
 		try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 						
 			int counter = 0;
 			for (Map.Entry<String, Integer> entry : map.entrySet()) {
 	        	
-				
 				pstmt.setString(1, entry.getKey());
 				pstmt.setInt(2, entry.getValue());
 				

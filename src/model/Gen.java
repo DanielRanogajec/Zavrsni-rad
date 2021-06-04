@@ -7,7 +7,7 @@ public class Gen {
 	private String organism;
 	private String genomic_context;
 	private String annotation;
-	private String ID;
+	private int ID;
 	private String[] other_aliases;
 	private String[] other_designations;
 	
@@ -50,12 +50,12 @@ public class Gen {
 		this.annotation = annotation;
 	}
 	
-	public String getID() {
+	public int getID() {
 		return ID;
 	}
 	
-	public void setID(String iD) {
-		ID = iD;
+	public void setID(int id) {
+		ID = id;
 	}
 	
 	public String[] getOther_aliases() {

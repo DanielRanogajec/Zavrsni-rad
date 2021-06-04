@@ -23,8 +23,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
@@ -32,7 +32,7 @@ import org.postgresql.util.PSQLException;
 
 import postgres.database.tools.DatabaseConnection;
 
-public class Main extends JFrame{
+public class MainWindow extends JFrame{
 
 	/**
 	 * 
@@ -210,12 +210,12 @@ public class Main extends JFrame{
 		}
 	}
 
-	public Main() {
+	public MainWindow() {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		initGUI();
 		setSize(650, 200);
 		setLocationRelativeTo(null);
-		setTitle("Aplikacija za pohranu bioinformatičkih podataka u sustavu PostgreSQL");
+		setTitle("Bioinformatics app");
 
 		try {
 			userData = DatabaseConnection.ConnectToDb();
@@ -225,7 +225,7 @@ public class Main extends JFrame{
 
 		info = new String[] {"tax_id", "name_txt", "unique_name", "name_class", "parent_tax_id", "rank", "embl_code",
 				"division_id", "inherited_div_flag", "genetic_code_id", "inherited_GC_flag", "mitochondrial_genetic_code_id",
-				"inheritedMGC_flag", "genbank_hidden_flag", "hidden_subtree_root_flag", "division_cde", "division_name", 
+				"inherited_MGC_flag", "genbank_hidden_flag", "hidden_subtree_root_flag", "division_cde", "division_name", 
 				"abbrevation", "name", "cde", "starts", "file_location"};
 
 	}
@@ -235,7 +235,7 @@ public class Main extends JFrame{
 		
 		Container cp = this.getContentPane();
 			
-		cp.setLayout(new LayoutProzora());
+		cp.setLayout(new WindowLayout());
 		cp.setBackground(Color.CYAN);
 		
 		search = new JTextArea();
@@ -244,7 +244,7 @@ public class Main extends JFrame{
 				BorderFactory.createLoweredBevelBorder()));
 		checkHint();
 
-		cp.add(search, LayoutProzora.FIRST_ELEMENT);
+		cp.add(search, WindowLayout.FIRST_ELEMENT);
 		search.addKeyListener(new KeyAdapter() {
 			
 			@Override
@@ -273,7 +273,7 @@ public class Main extends JFrame{
 
 		comboBox = new JComboBox<String>();
 		
-		cp.add(comboBox, LayoutProzora.SECOND_ELEMENT);
+		cp.add(comboBox, WindowLayout.SECOND_ELEMENT);
 
 		comboBox.addActionListener(new ActionListener() {
 
@@ -288,7 +288,7 @@ public class Main extends JFrame{
 			}
 		});
 
-		JButton next = new JButton("Traži");
+		JButton next = new JButton("Search");
 		next.setFont(next.getFont().deriveFont(15f));
 		next.addActionListener(e -> {
 			Thread t = new Thread(new DbRunnable(search.getText(), DbRunnable.SELECT));
@@ -302,11 +302,15 @@ public class Main extends JFrame{
 				break;
 	 		}
 			if (data != null) {
-				@SuppressWarnings("unused")
-				NewWindow newWindow = new NewWindow(data.get("name_txt"), Integer.parseInt(data.get("tax_id")), data);
+				new OrganismWindow(data.get("name_txt"), Integer.parseInt(data.get("tax_id")), data);
+			} else {
+				JOptionPane.showMessageDialog(MainWindow.this,
+					    "No result!",
+					    "Warning",
+					    JOptionPane.WARNING_MESSAGE);
 			}
 		});
-		cp.add(next, LayoutProzora.THIRD_ELEMENT);
+		cp.add(next, WindowLayout.THIRD_ELEMENT);
 	}
 
 	protected void checkHint() {
@@ -314,35 +318,14 @@ public class Main extends JFrame{
 			hint = true;
 		if (hint) {
 			search.setForeground(Color.LIGHT_GRAY);
-			search.setText("Upišite naziv organizma:");
+			search.setText("Enter the name of an organism:");
 			hint = false;
 		} else {
-			if (search.getText().equals("Upišite naziv organizma:"))
+			if (search.getText().equals("Enter the name of an organism:"))
 				search.setText("");
 			search.setForeground(Color.BLACK);
 		}
 	}
-
-	public static void main(String[] args) {
-		boolean connected = false;
-		try {
-			userData = DatabaseConnection.ConnectToDb();
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2));
-			connected = true;
-		} catch (IOException | SQLException | NullPointerException e) {
-			SwingUtilities.invokeLater(() -> {
-				new LoginWindow().setVisible(true);
-				
-			});
-			connected = true;
-		} 
-		
-		if (connected)
-			SwingUtilities.invokeLater(() -> {
-				new Main().setVisible(true);
-			});
-	}
-
 
 
 }

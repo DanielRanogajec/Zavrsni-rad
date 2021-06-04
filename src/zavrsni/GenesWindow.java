@@ -99,7 +99,7 @@ public class GenesWindow extends JFrame{
 		Map<String, String> mapa = new HashMap<>();
 		mapa.put("Symbol", gen.getSymbol());
 		mapa.put("Annotation", gen.getAnnotation());
-		mapa.put("Gene ID", gen.getID());
+		mapa.put("Gene ID", String.valueOf(gen.getID()));
 		mapa.put("Gene Description", gen.getGene_description());
 		mapa.put("Genomic Context", gen.getGenomic_context());
 		if (gen.getOther_aliases() != null)

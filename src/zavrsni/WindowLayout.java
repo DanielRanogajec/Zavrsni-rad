@@ -7,7 +7,7 @@ import java.awt.Insets;
 import java.awt.LayoutManager2;
 import java.util.function.Function;
 
-public class LayoutProzora implements LayoutManager2{
+public class WindowLayout implements LayoutManager2{
 
 	public static Integer FIRST_ELEMENT = 0;
 	public static Integer SECOND_ELEMENT = 1;

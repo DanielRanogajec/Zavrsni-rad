@@ -1,11 +1,4 @@
-CREATE TABLE names
-(
-  tax_id INT NOT NULL,
-  name_txt VARCHAR NOT NULL,
-  unique_name VARCHAR,
-  name_class VARCHAR NOT NULL
-);
-
+DROP TABLE IF EXISTS division CASCADE;
 CREATE TABLE division
 (
   division_id INT NOT NULL,
@@ -16,6 +9,7 @@ CREATE TABLE division
   UNIQUE (division_cde)
 );
 
+DROP TABLE IF EXISTS gencode CASCADE;
 CREATE TABLE gencode
 (
   genetic_code_id INT NOT NULL,
@@ -26,6 +20,7 @@ CREATE TABLE gencode
   PRIMARY KEY (genetic_code_id)
 );
 
+DROP TABLE IF EXISTS nodes CASCADE;
 CREATE TABLE nodes
 (
   tax_id INT NOT NULL,
@@ -41,34 +36,56 @@ CREATE TABLE nodes
   genbank_hidden_flag INT NOT NULL,
   hidden_subtree_root_flag INT NOT NULL,
   comments VARCHAR,
+  PRIMARY KEY(tax_id),
   FOREIGN KEY (division_id) REFERENCES division(division_id),
   FOREIGN KEY (genetic_code_id) REFERENCES gencode(genetic_code_id),
   FOREIGN KEY (mitochondrial_genetic_code_id) REFERENCES gencode(genetic_code_id)
 );
 
+DROP TABLE IF EXISTS names CASCADE;
+CREATE TABLE names
+(
+  tax_id INT NOT NULL,
+  name_txt VARCHAR NOT NULL,
+  unique_name VARCHAR,
+  name_class VARCHAR NOT NULL,
+  id SERIAL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
+);
+
+DROP TABLE IF EXISTS reference_genomes;
 CREATE TABLE reference_genomes
 (
   tax_id INT NOT NULL,
-  file_location VARCHAR,
-  PRIMARY KEY (tax_id)
+  file_location VARCHAR NOT NULL,
+  id SERIAL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );
 
+DROP TABLE IF EXISTS headers;
 CREATE TABLE headers
 (
   header VARCHAR NOT NULL,
   tax_id INT NOT NULL,
-  PRIMARY KEY (header)
+  id SERIAL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );
 
+DROP TABLE IF EXISTS genes;
 CREATE TABLE genes
 (
   tax_id INT NOT NULL,
   symbol VARCHAR NOT NULL,
-  ID VARCHAR NOT NULL,
+  id INT NOT NULL,
   gene_description VARCHAR,
   organism VARCHAR NOT NULL,
   genomic_context VARCHAR,
   annotation VARCHAR,
   other_aliases VARCHAR,
-  other_designations VARCHAR
+  other_designations VARCHAR,
+  PRIMARY KEY(id),
+  FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );
