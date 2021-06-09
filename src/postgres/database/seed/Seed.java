@@ -50,7 +50,6 @@ public class Seed {
             fillNodes(connection);
             fillNames(connection);
             
-            
         } 	catch (SQLException e) {
 			System.out.println("Connection failure.");
 			e.printStackTrace();

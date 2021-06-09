@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -31,6 +32,7 @@ import javax.swing.WindowConstants;
 import org.postgresql.util.PSQLException;
 
 import postgres.database.tools.DatabaseConnection;
+import postgres.database.tools.FileReader;
 
 public class MainWindow extends JFrame{
 
@@ -80,24 +82,42 @@ public class MainWindow extends JFrame{
 				return;
 			try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
 				try {
-					PreparedStatement pstmt = connection.prepareStatement("INSERT INTO reference_genomes VALUES(?,?) ON CONFLICT(tax_id) DO NOTHING;");
+					PreparedStatement pstmt = connection.prepareStatement("INSERT INTO reference_genomes VALUES(?,?) returning genome_id;");
 					pstmt.setInt(1, Integer.parseInt(data.get("tax_id")));
 					pstmt.setString(2, element);
-					pstmt.execute();
+					ResultSet rs = pstmt.executeQuery();
+					if (rs.next()) {
+						Map<String, Integer> map = new HashMap<>();
+						Map<String, List<String>> fasta = FileReader.readFasta(element);
+						Set<String> set = fasta.keySet();
+						for (String string : set) {
+							map.put(string, rs.getInt(1));
+						}
+						
+						try (PreparedStatement pstmt2 = connection.prepareStatement("INSERT INTO headers VALUES(?,?);")) {
+										
+							int counter = 0;
+							for (Map.Entry<String, Integer> entry : map.entrySet()) {
+					        	
+								pstmt2.setString(1, entry.getKey());
+								pstmt2.setInt(2, entry.getValue());
+								
+								pstmt2.addBatch();
+								
+								if (++counter % 100 == 0 || counter == map.size())
+									pstmt2.executeBatch();
+					        }
+				        } catch (SQLException e) {
+				        	e.printStackTrace();
+				        }	
+					}
 
 				} catch (SQLException ex) {
 					ex.printStackTrace();
 				}
 
 			} catch (SQLException e) {
-				System.out.println("Connection failure.");
 				e.printStackTrace();
-
-				try {
-					DatabaseConnection.WrongData();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
 			}			
 		}
 
@@ -122,12 +142,12 @@ public class MainWindow extends JFrame{
 					if (data == null)
 						return;
 					if (data.get("file_location") == null) {
-						pstmt = connection.prepareStatement("WITH RECURSIVE sub_tree AS (\n"
+						pstmt = connection.prepareStatement("with recursive sub_tree as (\n"
 								+ "select nodes.tax_id, names.name_txt, nodes.parent_tax_id, file_location\n"
 								+ "from names, nodes left outer join reference_genomes \n"
 								+ "on nodes.tax_id = reference_genomes.tax_id, gencode, division \n"
 								+ "where nodes.genetic_code_id = gencode.genetic_code_id and nodes.division_id = division.division_id and nodes.tax_id = names.tax_id\n"
-								+ "and name_txt = ? and name_class = 'scientific name'\n"
+								+ "and name_txt = ?\n"
 								+ "	\n"
 								+ "union all\n"
 								+ "	\n"
@@ -160,14 +180,7 @@ public class MainWindow extends JFrame{
 
 
 			} catch (SQLException e) {
-				System.out.println("Connection failure.");
 				e.printStackTrace();
-
-				try {
-					DatabaseConnection.WrongData();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
 			}
 
 		}
@@ -177,7 +190,7 @@ public class MainWindow extends JFrame{
 			try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + userData.get(0), userData.get(1), userData.get(2))){
 
 				try {
-					PreparedStatement pstmt = connection.prepareStatement("select * from names where name_txt ilike ?;");
+					PreparedStatement pstmt = connection.prepareStatement("select name_txt from names where name_txt ilike ?;");
 					pstmt.setString(1, search.getText() + "%");
 					ResultSet rs = pstmt.executeQuery();
 					List<String> names = new ArrayList<>();
@@ -200,12 +213,6 @@ public class MainWindow extends JFrame{
 			} catch (SQLException e) {
 				System.out.println("Connection failure.");
 				e.printStackTrace();
-
-				try {
-					DatabaseConnection.WrongData();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
 			}
 		}
 	}

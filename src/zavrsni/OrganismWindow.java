@@ -182,7 +182,7 @@ public class OrganismWindow extends JFrame{
 						while (rs.next()) {
 							Gen g = new Gen();
 							g.setSymbol(rs.getString("symbol"));
-							g.setID(Integer.parseInt(rs.getString("id")));
+							g.setID(Integer.parseInt(rs.getString("gene_id")));
 							g.setGene_description(rs.getString("gene_description"));
 							g.setOrganism(rs.getString("organism"));
 							g.setGenomic_context(rs.getString("genomic_context"));

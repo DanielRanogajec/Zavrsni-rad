@@ -49,8 +49,8 @@ CREATE TABLE names
   name_txt VARCHAR NOT NULL,
   unique_name VARCHAR,
   name_class VARCHAR NOT NULL,
-  id SERIAL,
-  PRIMARY KEY (id),
+  name_id SERIAL,
+  PRIMARY KEY (name_id),
   FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );
 
@@ -59,8 +59,8 @@ CREATE TABLE reference_genomes
 (
   tax_id INT NOT NULL,
   file_location VARCHAR NOT NULL,
-  id SERIAL,
-  PRIMARY KEY (id),
+  genome_id SERIAL,
+  PRIMARY KEY (genome_id),
   FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );
 
@@ -68,10 +68,10 @@ DROP TABLE IF EXISTS headers;
 CREATE TABLE headers
 (
   header VARCHAR NOT NULL,
-  tax_id INT NOT NULL,
-  id SERIAL,
-  PRIMARY KEY (id),
-  FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
+  genome_id INT NOT NULL,
+  header_id SERIAL,
+  PRIMARY KEY (header_id),
+  FOREIGN KEY (genome_id) REFERENCES reference_genomes(genome_id)
 );
 
 DROP TABLE IF EXISTS genes;
@@ -79,13 +79,13 @@ CREATE TABLE genes
 (
   tax_id INT NOT NULL,
   symbol VARCHAR NOT NULL,
-  id INT NOT NULL,
+  gene_id INT NOT NULL,
   gene_description VARCHAR,
   organism VARCHAR NOT NULL,
   genomic_context VARCHAR,
   annotation VARCHAR,
   other_aliases VARCHAR,
   other_designations VARCHAR,
-  PRIMARY KEY(id),
+  PRIMARY KEY(gene_id),
   FOREIGN KEY (tax_id) REFERENCES nodes(tax_id)
 );

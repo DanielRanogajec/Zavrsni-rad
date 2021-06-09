@@ -61,10 +61,9 @@ public class SeedReferenceGenomes {
 			System.out.println("Connected to PostgreSQL database!");
 
 			Map<Integer, File> mapRG = new HashMap<>();
-			Map<String, Integer> mapHeaders = new HashMap<>();
 			
 			PreparedStatement pstmt = connection.prepareStatement("select * from names where name_txt = ?");
-			
+
 			for (File file : files) {
 				String s = file.getName();
 				if (!s.endsWith(".fasta"))
@@ -74,17 +73,13 @@ public class SeedReferenceGenomes {
 				pstmt.setString(1, s);
 				ResultSet rs = pstmt.executeQuery();
 				if (rs.next()) {
-					int tax_id = rs.getInt("tax_id");
-					Map<String, List<String>> fasta = FileReader.readFasta(file.getName());
-					Set<String> set = fasta.keySet();
-					mapRG.put(tax_id,file);
-					set.forEach(l -> mapHeaders.put(l, tax_id));
+					
+					mapRG.put(rs.getInt("tax_id"),file);
 					
 				}
 			}
 						
 			fillReferenceGenomes(connection, mapRG);
-			fillHeaders(connection, mapHeaders);
 
 		} 	catch (SQLException e) {
 			System.out.println("Connection failure.");
@@ -107,21 +102,26 @@ public class SeedReferenceGenomes {
      * @throws SQLException
      */
 	private static void fillReferenceGenomes(Connection connection, Map<Integer, File> map) throws SQLException {
-		String SQLinsert = "INSERT INTO reference_genomes VALUES(?,?);";
-
+		String SQLinsert = "INSERT INTO reference_genomes VALUES(?,?) returning genome_id;";
+		Map<String, Integer> mapHeaders = new HashMap<>();
 		try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 						
-			int counter = 0;
 			for (Map.Entry<Integer, File> entry : map.entrySet()) {
 				
 				pstmt.setInt(1, entry.getKey());
 				pstmt.setString(2, entry.getValue().getName());
-				pstmt.addBatch();
-				
-				if (++counter % 100 == 0 || counter == map.size())
-					pstmt.executeBatch();
+				ResultSet rs = pstmt.executeQuery();
+				if (rs.next()) {
+					Map<String, List<String>> fasta = FileReader.readFasta(entry.getValue().getName());
+					Set<String> set = fasta.keySet();
+					for (String string : set) {
+						mapHeaders.put(string, rs.getInt(1));
+					}
+				}
 	        }
 	        System.out.println("Table reference_genomes filled!");
+	        
+			fillHeaders(connection, mapHeaders);
 
         } catch (SQLException e) {
         	throw new SQLException("Error inserting into reference_genomes table.");

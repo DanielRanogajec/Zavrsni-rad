@@ -157,7 +157,7 @@ public class BioinformaticsApp extends JFrame {
 							}
 							
 							if (k == 0) {
-								if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
+								if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your database is empty. Please wait a couple of minutes to fill it!", "Fill the database", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
 									return;
 								
 								login.setEnabled(false);
@@ -172,7 +172,7 @@ public class BioinformaticsApp extends JFrame {
 							}
 
 						} catch (SQLException ex) {
-							if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your Database is empty. Please wait a couple of minutes to fill them!", "Fill the table", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
+							if (JOptionPane.showOptionDialog(BioinformaticsApp.this, "Your database is empty. Please wait a couple of minutes to fill it!", "Fill the database", JOptionPane.OK_CANCEL_OPTION,  JOptionPane.WARNING_MESSAGE, null, null, null) != JOptionPane.OK_OPTION)
 								return;
 							
 							login.setEnabled(false);
