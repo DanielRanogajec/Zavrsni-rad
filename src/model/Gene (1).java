@@ -1,6 +1,12 @@
 package model;
 
-public class Gen {
+/**
+ * Model for genes.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
+public class Gene {
 
 	private String symbol;
 	private String gene_description;
@@ -11,6 +17,7 @@ public class Gen {
 	private String[] other_aliases;
 	private String[] other_designations;
 	
+
 	public String getSymbol() {
 		return symbol;
 	}

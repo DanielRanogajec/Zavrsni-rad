@@ -7,6 +7,12 @@ import java.awt.Insets;
 import java.awt.LayoutManager2;
 import java.util.function.Function;
 
+/**
+ * Layout for OrganismWindow.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class WindowLayout implements LayoutManager2{
 
 	public static Integer FIRST_ELEMENT = 0;

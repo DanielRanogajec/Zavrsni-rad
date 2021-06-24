@@ -5,6 +5,12 @@ import java.util.Map;
 
 import javax.swing.table.AbstractTableModel;
 
+/**
+ * Model for organisms that extends AbstractTableModel.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class TableModel extends AbstractTableModel{
 
 	/**
@@ -15,7 +21,10 @@ public class TableModel extends AbstractTableModel{
 	private String[] dataKey;
 	private String[] dataValue;
 	
-	
+	/**
+	 * Constructor method.
+	 * @param data pairing of key and value of each information of an organism
+	 */
 	public TableModel(Map<String, String> data) {
 		if (data != null) {
 			dataKey = Arrays.copyOf(data.keySet().toArray(), data.size(), String[].class);
@@ -55,6 +64,10 @@ public class TableModel extends AbstractTableModel{
 		return "";
 	}
 
+	/**
+	 * Method used for updating data
+	 * @param data
+	 */
 	public void updateData(Map<String, String> data) {
 		if (data != null) {
 			dataKey = Arrays.copyOf(data.keySet().toArray(), data.size(), String[].class);

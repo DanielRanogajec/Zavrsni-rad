@@ -37,7 +37,7 @@ import javax.swing.SortOrder;
 import javax.swing.WindowConstants;
 import javax.swing.table.TableRowSorter;
 
-import model.Gen;
+import model.Gene;
 import postgres.database.tools.DatabaseConnection;
 import postgres.database.tools.DownloadFastaFile;
 import postgres.database.tools.FileReader;
@@ -45,6 +45,12 @@ import postgres.database.tools.GeneParser;
 import postgres.database.tools.GroupFastaFiles;
 import zavrsni.MainWindow.DbRunnable;
 
+/**
+ * JFrame that shows the information about the selected organism.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class OrganismWindow extends JFrame{
 
 	/**
@@ -58,9 +64,15 @@ public class OrganismWindow extends JFrame{
 	private String parent;
 	private Map<String, String> dataInfo;
 	private String fileLocation;
-	private List<Gen> genes;
+	private List<Gene> genes;
 	private JButton genButton;
 
+	/**
+	 * Constructor method
+	 * @param name
+	 * @param tax_id
+	 * @param data
+	 */
 	public OrganismWindow(String name, int tax_id, Map<String, String> data) {
 		if (data == null) 
 			dispose();
@@ -76,6 +88,9 @@ public class OrganismWindow extends JFrame{
 		setVisible(true);
 	}
 
+	/**
+	 * Method used for initializing the GUI.
+	 */
 	private void initGUI() {
 
 		Container cp = this.getContentPane();
@@ -165,8 +180,11 @@ public class OrganismWindow extends JFrame{
 		cp.add(panel);
 	}
 
-
-
+	/**
+	 * Method used for getting gene info from given tax_id.
+	 * 
+	 * @param tax_id
+	 */
 	private void getGenes(int tax_id) {
 		try {
 			List<String> userData = DatabaseConnection.Connect();
@@ -180,7 +198,7 @@ public class OrganismWindow extends JFrame{
 						ResultSet rs = pstmt.executeQuery();
 						genes = new ArrayList<>();
 						while (rs.next()) {
-							Gen g = new Gen();
+							Gene g = new Gene();
 							g.setSymbol(rs.getString("symbol"));
 							g.setID(Integer.parseInt(rs.getString("gene_id")));
 							g.setGene_description(rs.getString("gene_description"));
@@ -200,6 +218,9 @@ public class OrganismWindow extends JFrame{
 		} catch (SQLException | IOException ex2) {}
 	}
 
+	/**
+	 * Action for adding new genes for the organism.
+	 */
 	private Action addGenesAction = new AbstractAction() {
 
 		/**
@@ -225,6 +246,9 @@ public class OrganismWindow extends JFrame{
 
 	};
 
+	/**
+	 * Action for adding new sequences of genomes for organism.
+	 */
 	private Action addFastaAction = new AbstractAction() {
 
 		/**
@@ -270,6 +294,9 @@ public class OrganismWindow extends JFrame{
 		}
 	};
 
+	/**
+	 * Method used for saving sequences of reference genomes to the disk.
+	 */
 	private Action saveFastaAction = new AbstractAction() {
 
 		/**
@@ -296,6 +323,9 @@ public class OrganismWindow extends JFrame{
 		}
 	};
 
+	/**
+	 * Private method for showing info.
+	 */
 	private void initDataInfo() {
 		dataInfo = new HashMap<String, String>();
 
@@ -322,6 +352,9 @@ public class OrganismWindow extends JFrame{
 		dataInfo.put("starts", "Start codons for this genetic code");
 	}
 
+	/**
+	 * Method used for inserting genes into the database.
+	 */
 	protected void addToDb() {
 		String SQLinsert = "INSERT INTO genes VALUES(?,?,?,?,?,?,?,?,?);";
 		List<String> userData = null;
@@ -360,7 +393,7 @@ public class OrganismWindow extends JFrame{
 			try (PreparedStatement pstmt = connection.prepareStatement(SQLinsert)) {
 
 				int counter = 0;
-				for (Gen gen : genes) {
+				for (Gene gen : genes) {
 															
 					if (gen.getSymbol() == null)
 						continue;

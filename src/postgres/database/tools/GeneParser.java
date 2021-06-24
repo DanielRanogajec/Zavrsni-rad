@@ -6,13 +6,19 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import model.Gen;
+import model.Gene;
 
+/**
+ * Parser class for parsing genes read from a file
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class GeneParser {
 
-	public static List<Gen> parseGenes(File file) {
+	public static List<Gene> parseGenes(File file) {
 		List<String> s;
-		List<Gen> geni = new ArrayList<>();
+		List<Gene> geni = new ArrayList<>();
 		try {
 			s = Files.readAllLines(file.toPath());
 		} catch (IOException e) {
@@ -21,11 +27,11 @@ public class GeneParser {
 		s.remove(s.size()-1);
 		if (s.get(0).isEmpty())
 			s.remove(0);
-		geni.add(new Gen());
+		geni.add(new Gene());
 		int cnt = 0;
 		for (String string : s) {
 			if (string.isEmpty()) {
-				geni.add(new Gen());
+				geni.add(new Gene());
 				cnt++;
 			} else {
 				parse(string, geni.get(cnt));
@@ -36,7 +42,7 @@ public class GeneParser {
 		return geni;
 	}
 
-	private static void parse(String string, Gen g) {
+	private static void parse(String string, Gene g) {
 		if (g.getSymbol() == null) {
 			g.setSymbol(string.split(" ")[1]);
 		} else if (g.getGene_description() == null) {

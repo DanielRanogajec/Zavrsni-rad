@@ -6,14 +6,24 @@ import java.util.List;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
 
-import model.Gen;
+import model.Gene;
 
-public class GenesListModel implements ListModel<Gen>{
+/**
+ * Model for the list of genes that implements ListModel
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
+public class GenesListModel implements ListModel<Gene>{
 	
-	private List<Gen> elements;
+	private List<Gene> elements;
 	private List<ListDataListener> listeners;
 	
-	public GenesListModel(List<Gen> elements) {
+	/**
+	 * Constructor method.
+	 * @param elements list of genes
+	 */
+	public GenesListModel(List<Gene> elements) {
 		this.elements = elements;
 		this.listeners = new ArrayList<>();
 	}
@@ -24,7 +34,7 @@ public class GenesListModel implements ListModel<Gen>{
 	}
 
 	@Override
-	public Gen getElementAt(int index) {
+	public Gene getElementAt(int index) {
 		return elements.get(index);
 	}
 

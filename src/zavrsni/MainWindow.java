@@ -34,6 +34,12 @@ import org.postgresql.util.PSQLException;
 import postgres.database.tools.DatabaseConnection;
 import postgres.database.tools.FileReader;
 
+/**
+ * JFrame that represents a search bar.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class MainWindow extends JFrame{
 
 	/**
@@ -49,7 +55,12 @@ public class MainWindow extends JFrame{
 	private boolean hint;
 	private Timer timer;
 
-
+	/**
+	 * Nested static class that implements Runnable.
+	 * 
+	 * @author Daniel_Ranogajec
+	 *
+	 */
 	static class DbRunnable implements Runnable{
 
 		public final static int SELECT = 1;
@@ -58,11 +69,19 @@ public class MainWindow extends JFrame{
 		private String element;
 		private int mode;
 
+		/**
+		 * Constructor method.
+		 * @param element
+		 * @param mode
+		 */
 		DbRunnable(String element, int mode) {
 			this.element = element;
 			this.mode = mode;
 		}
 
+		/**
+		 * Constructor method.
+		 */
 		DbRunnable() {
 			this(null, 0);
 		}
@@ -77,6 +96,9 @@ public class MainWindow extends JFrame{
 				dbInsert();
 		}
 
+		/**
+		 * Method used for inserting data into database.
+		 */
 		private void dbInsert() {
 			if (userData == null)
 				return;
@@ -121,6 +143,9 @@ public class MainWindow extends JFrame{
 			}			
 		}
 
+		/**
+		 * Method used for selecting data from database.
+		 */
 		private void dbSelect() {
 			if (userData == null)
 				return;
@@ -184,6 +209,10 @@ public class MainWindow extends JFrame{
 			}
 
 		}
+		
+		/**
+		 * Method used for getting similar names from database.
+		 */
 		private void dbSearch() {
 			if (userData == null)
 				return;
@@ -217,6 +246,9 @@ public class MainWindow extends JFrame{
 		}
 	}
 
+	/**
+	 * Constructor method.
+	 */
 	public MainWindow() {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		initGUI();
@@ -237,7 +269,9 @@ public class MainWindow extends JFrame{
 
 	}
 
-
+	/**
+	 * Method used for initializing the GUI.
+	 */
 	private void initGUI() {
 		
 		Container cp = this.getContentPane();
@@ -320,6 +354,9 @@ public class MainWindow extends JFrame{
 		cp.add(next, WindowLayout.THIRD_ELEMENT);
 	}
 
+	/**
+	 * Method used for writing a hint in JTextArea.
+	 */
 	protected void checkHint() {
 		if (search.getText().length() == 0)
 			hint = true;

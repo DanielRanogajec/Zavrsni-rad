@@ -21,17 +21,29 @@ import javax.swing.SortOrder;
 import javax.swing.WindowConstants;
 import javax.swing.table.TableRowSorter;
 
-import model.Gen;
+import model.Gene;
 
+/**
+ * JFrame that shows a list of genes with its information.
+ * 
+ * @author Daniel_Ranogajec
+ *
+ */
 public class GenesWindow extends JFrame{
 	
 	private static final long serialVersionUID = 1L;
 	
-	private List<Gen> genes;
+	private List<Gene> genes;
 	private JTable table;
 	private TableModel tableModel;
 
-	public GenesWindow(List<Gen> genes) {
+	
+	/**
+	 * Constructor method
+	 * 
+	 * @param genes list of genes
+	 */
+	public GenesWindow(List<Gene> genes) {
 		
 		if (genes == null || genes.isEmpty())
 			return;
@@ -45,6 +57,9 @@ public class GenesWindow extends JFrame{
 		setVisible(true);
 	}
 
+	/**
+	 * Method for initializing the GUI.
+	 */
 	private void initGUI() {
 
 		Container cp = this.getContentPane();
@@ -56,7 +71,7 @@ public class GenesWindow extends JFrame{
 		
 		GenesListModel model = new GenesListModel(genes);
 		
-		JList<Gen> lista = new JList<>(model);
+		JList<Gene> lista = new JList<>(model);
 		
 		tableModel = new TableModel(initData(genes.get(0)));
 		table = new JTable(tableModel);
@@ -87,14 +102,24 @@ public class GenesWindow extends JFrame{
 		cp.add(panel);
 	}
 
-	protected void dataSelected(Gen selectedValue) {
+	/**
+	 * Method that is called when selected value from list of genes is changed.
+	 * 
+	 * @param selectedValue
+	 */
+	protected void dataSelected(Gene selectedValue) {
 		
 		tableModel.updateData(initData(selectedValue));
 		tableModel.fireTableDataChanged();
 		
 	}
 
-	private Map<String, String> initData(Gen gen) {
+	/**
+	 * Method for initializing the data.
+	 * @param gen the gene you are showing the info of
+	 * @return map of gene info
+	 */
+	private Map<String, String> initData(Gene gen) {
 		
 		Map<String, String> mapa = new HashMap<>();
 		mapa.put("Symbol", gen.getSymbol());
